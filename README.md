@@ -1,31 +1,16 @@
-# modelo-README.md
-Modelo (template) de README para utilizar nas documentações dos seus projetos no GitHub. Deixe sua ⭐ se curtiu o template, para ficar salvo e utilizar depois.
+# Streaming de Vídeo
 
-# Título/Nome do projeto
+Implementação de um straming de vídeo baseado em um protocolo próprio descrito posteriormente. Não se trata estritamente de streaming, pois não acontece uma transmissão contínua com visualização progressiva.
 
-Descreva brevemente o seu projeto. Aqui você pode utilizar texto e também imagens/diagramas.
+O sistema desenvolvido consiste em dois elementos, um cliente e um servidor. Nesse caso, o mesmo programa serve para ambas funcionalidades, distinguindo-as pelos parâmetros.
 
-* O [Mermaid](https://mermaid.live/edit#pako:eNpVkE1uwjAQha9izapIZFGWWVSCBFZUVCq7mMXInjSW_Fdji6Ikp2HRg3CxmmRDZzV633uj0etBOElQQqvdRXQYIjvW3LI862bttRJ4_73fHHs9saJ4GwJ9JzrHgW1enulqMWc2DxOr-u0PGa_dOKvVFD1YGljd7NFH50_P5HhxA9s26qNzlv6TLlBO7ZoWyxYLgYFVGCYLLMFQMKhk_r5_KBxiR4Y4lHmV1GLSkQO3Y7Ziiu7zagWUMSRaQvISI9UKvwIayLf1OaskVXThfW5kKmb8AyAeX3o) é uma opção bem legal para diagramas e você consegue utilizar diretamente no README.md:
+O servidor e o cliente executam em máquinas distintas, conectadas por um cabo de rede.
 
-[![](https://mermaid.ink/img/pako:eNpVkE1uwjAQha9izapIZFGWWVSCBFZUVCq7mMXInjSW_Fdji6Ikp2HRg3CxmmRDZzV633uj0etBOElQQqvdRXQYIjvW3LI862bttRJ4_73fHHs9saJ4GwJ9JzrHgW1enulqMWc2DxOr-u0PGa_dOKvVFD1YGljd7NFH50_P5HhxA9s26qNzlv6TLlBO7ZoWyxYLgYFVGCYLLMFQMKhk_r5_KBxiR4Y4lHmV1GLSkQO3Y7Ziiu7zagWUMSRaQvISI9UKvwIayLf1OaskVXThfW5kKmb8AyAeX3o?type=png)](https://mermaid.live/edit#pako:eNpVkE1uwjAQha9izapIZFGWWVSCBFZUVCq7mMXInjSW_Fdji6Ikp2HRg3CxmmRDZzV633uj0etBOElQQqvdRXQYIjvW3LI862bttRJ4_73fHHs9saJ4GwJ9JzrHgW1enulqMWc2DxOr-u0PGa_dOKvVFD1YGljd7NFH50_P5HhxA9s26qNzlv6TLlBO7ZoWyxYLgYFVGCYLLMFQMKhk_r5_KBxiR4Y4lHmV1GLSkQO3Y7Ziiu7zagWUMSRaQvISI9UKvwIayLf1OaskVXThfW5kKmb8AyAeX3o)
-
-- No site, vá no campo: Actions > Copy Markdown. Copie o link e cole no seu arquivo README.md e o diagrama estará lá.
-
+Uma vez conectados e iniciados cliente e servidor, no cliente é mostrado uma lista de títulos de vídeos disponíveis no servidor, em mp4 e/ou avi. O usuário, no cliente, pode escolher um dos vídeos. A partir da escolha, o vídeo é transferido para o cliente. Após a transferência, o cliente chama um player para a exibição iniciar.
 
 ### Tecnologias Utilizadas
 
-Liste as tecnologias (linguagens, ferramentas, bibliotecas) que você utilizou para elaborar o projeto. Essa parte é importante para quando um recrutador (que não tem conhecimento de programação) acessar o seu projeto, ele vai saber só olhando a documentação quais tecnologias você já conhece!
-
-Exemplo:
-* [Golang](https://github.com/golang/go)
-* [Docker](https://www.docker.com/)
-* [MySQL](https://www.mysql.com/)
-
-## Dependências e Versões Necessárias
-
-Liste as dependências necessárias para rodar o projeto e as versões que você utilizou.
-
-* Docker - Versão: X.X
+* C
 
 ## Como rodar o projeto ✅
 
@@ -55,25 +40,37 @@ make test
 
 ## 📌 (Título) - Informações importantes sobre a aplicação (exemplo) 📌
 
-Esse é o local para você preencher com outras informações que possam ser importantes para a aplicação. Coloquei um exemplo de título, mas você deve preencher de acordo com a necessidade do projeto. Pode ser que não seja necessário.
+As máquinas devem operar em modo root e devem estar interligadas por cabo de rede diretamente.
 
-Um bom exemplo: se você estiver construindo uma API, liste as rotas da aplicação e quais serão os seus retornos. Isso facilita para quem vai consumir a API.
+A comunicação é baseada em raw sockets.
 
+O frame deve ter o seguinte formato
 
-## ⚠️ Problemas enfrentados
+* Marcador de início: 0111 1110 (8 bits)
+* Tamanho em bytes (6 bits - Tamanho da área de dados)
+* Sequência (5 bits)
+* Tipo (5 bits)
+* Dados (0 a 63 bytes)
+* CRC-8 (8 bits)
 
-Liste os problemas que você enfrentou construindo a aplicação e como você resolveu cada um deles. Você que desenvolveu o projeto é a pessoa que mais conhece/entende os possíveis problemas que uma pessoa pode enfrentar rodando a aplicação. Compartilhe esse conhecimento e facilite a vida da pessoa descrevendo-os.
+O controle de fluxo é por janela deslizante, go-back N (volta N), com tamanho de janela fixo em 5 mensagens nas transmissões de arquivos e em uma mensagem (para-espera) nas demais mensagens.
 
-Exemplo:
+O nome de cada arquivo pode ter no máximo 63 bytes, possuindo somente caracteres ASCII na faixa de 0x20 0x7E.
 
-### Problema 1:
-Descrição do problema
-* Como solucionar: explicar a solução.
+Os tipos de mensagens (campo "Tipo") são:
 
-### Problema 2:
-Descrição do problema
-* Como solucionar: explicar a solução.
+* 00000 ack
+* 00001 nack
+* 01010 lista
+* 01011 baixar
+* 10000 mostra na tela
+* 10001 descritor no arquivo
+* 10010 dados
+* 11110 fim tx
+* 11111 erro
 
-## ⏭️ Próximos passos
+  Os erros reportados são:
 
-Descreva se você pretende, pensou ou gostaria de elaborar uma nova feature para o seu projeto definindo os próximos passos.
+  * 1 acesso negado
+  * 2 não encontrado
+  * 3 disco cheio
