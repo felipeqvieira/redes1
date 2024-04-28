@@ -8,6 +8,8 @@ O servidor e o cliente executam em máquinas distintas, conectadas por um cabo d
 
 Uma vez conectados e iniciados cliente e servidor, no cliente é mostrado uma lista de títulos de vídeos disponíveis no servidor, em mp4 e/ou avi. O usuário, no cliente, pode escolher um dos vídeos. A partir da escolha, o vídeo é transferido para o cliente. Após a transferência, o cliente chama um player para a exibição iniciar.
 
+O vídeo será transmitido no navegador através do MPlayer
+
 ### Tecnologias Utilizadas
 
 * C

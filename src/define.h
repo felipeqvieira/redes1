@@ -85,3 +85,4 @@ protocolo *recebe_msg(int socket, int n_msgs); // Recebe a mensagem
 uint8_t ler_msg(protocolo *msg); // Lê o tipo da mensagem
 void imprime_msg(protocolo *msg); // Imprime a mensagem
 void socket_errors(short errno, interface ifc); // Mostas os possíveis erros de socket
+uint8_t CRC8_calc( uint8_t data, uint8_t size) // Faz o cálculo do CRC8
