@@ -1,6 +1,7 @@
 #include "define.h"
 
-int openRSocket(char *interface){
+int openRSocket(char *interface)
+{
 
   int rsocket;
   struct packet_mreq mreq;

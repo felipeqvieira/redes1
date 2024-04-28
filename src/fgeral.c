@@ -53,7 +53,8 @@ uint8_t *aloca_vetor(int tam) {
   return (dados);
 }
 
-protocolo *cria_msg(uint8_t seq, uint8_t tipo, uint8_t *dados, ...) {
+protocolo *cria_msg(uint8_t seq, uint8_t tipo, uint8_t *dados, ...)
+{
 
   protocolo *msg;
 
@@ -106,7 +107,8 @@ protocolo *cria_msg(uint8_t seq, uint8_t tipo, uint8_t *dados, ...) {
   return (msg);
 }
 
-void envia_msg(int socket, protocolo *msg) {
+void envia_msg(int socket, protocolo *msg) 
+{
 
   uint8_t *buffer;
 
@@ -137,7 +139,8 @@ void envia_msg(int socket, protocolo *msg) {
   }
 }
 
-protocolo *recebe_msg(int socket, int n_msgs) {
+protocolo *recebe_msg(int socket, int n_msgs)
+{
 
   protocolo *msg;
   uint8_t *buffer;
@@ -177,24 +180,25 @@ protocolo *recebe_msg(int socket, int n_msgs) {
   }
 }
 
-uint8_t ler_msg(protocolo *msg) { 
-  
+uint8_t ler_msg(protocolo *msg)
+{
+
   uint8_t teste_crc = 0;
 
-  if(! msg)
+  if (!msg)
     return (-1);
 
   teste_crc = cal_crc8(msg);
 
-  if(teste_crc == msg->detec_erros)
+  if (teste_crc == msg->detec_erros)
     return (msg->tipo);
-  else 
+  else
     return (ERRO_CRC);
-  
 }
 
 /* Imprime mensagem */
-void imprime_msg(protocolo *msg) {
+void imprime_msg(protocolo *msg)
+{
   if (msg) {
     printf("****************************\n");
     printf("MARCADOR : %d \n", msg->marcador);
@@ -205,4 +209,24 @@ void imprime_msg(protocolo *msg) {
     printf("CRC : %d \n", msg->detec_erros);
     printf("****************************\n");
   }
+}
+
+void socket_errors(short errno, interface ifc) 
+{
+  switch (errno)
+  {
+  case -1:
+    fprintf(stderr, "ERRO - Não foi possível abrir socket, permissão negada (Necessário ser Root)\n");
+    break;
+  case -2:
+    fprintf(stderr, "ERRO - Interface %s não encontrada\n", ifc.name);
+    break;
+  case -3:
+    fprintf(stderr, "ERRO - Não foi possível conectar o socket a interface %s",ifc.name);
+    break;
+  case -4:
+    fprintf(stderr, "ERRO - Não foi possível ativar o modo promíscuo na interface %s",ifc.name);
+    break;
+  }
+  fprintf(stderr,"Abortando execução\n");
 }
