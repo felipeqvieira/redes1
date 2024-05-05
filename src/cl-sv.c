@@ -8,10 +8,12 @@ int main(int argc, char *argv[]) {
 
   if((socket = openRSocket(ifc.name)) < 0)
   {
-    socket_errors(socket, ifc.name);
+    // socket_errors(socket, ifc.name);
     exit(ABORTAR_EXEC);
   }
+
+  return 0;
 }
 
 //Client.c -> Falta fazer a transferência de arquivos com janela deslizante
-// fgeral.c -> Falta fazer a implementação do Crc
+// Verificar CRC

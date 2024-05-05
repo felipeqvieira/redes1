@@ -1,6 +1,6 @@
 #include <dirent.h>
 #include <errno.h>
-#include <fcnt1.h>
+#include <fcntl.h>
 #include <inttypes.h>
 #include <linux/if.h>
 #include <linux/if_ether.h>
@@ -11,12 +11,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/ioct1.h>
+#include <sys/ioctl.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <math.h>
 
 /* Atentar com sequência de VPN */
 
@@ -34,13 +36,22 @@ typedef struct protocolo {
   uint8_t seq;         // 5 bits
   uint8_t tipo;        // 5 bits
   uint8_t *dados;      // 63 bytes
-  uint8_t detec_erros; // 8 bits - crc-8 (tam, seq, tipo, dados)
+  uint8_t crc8; // 8 bits - crc-8 (tam, seq, tipo, dados)
 
 } protocolo;
 
+#define TIMEOUT 60
+
 // TAMANHO
-#define TAM_BUFFER                                                             \
-  67 // 63bytes de dados + 4 bytes fixos (Marcador, Tamanho, Seq, Tipo))
+#define TAM_BUFFER 67 // 63bytes de dados + 4 bytes fixos (Marcador, Tamanho, Seq, Tipo))
+
+#define MAX_FILE_NAME_SIZE 63 
+#define MAX_DATA_SIZE 63
+#define MAX_NUM_FILES 1023
+#define MAX_SEQUENCE 31
+#define MAX_TYPE 100 // Depois mudar para a quantidade correta de tipos
+#define PT_MD5 15 // Ver depois
+#define PT_OK 100// Ver depois
 
 // ERROS
 #define ABORTAR_EXEC -1
@@ -79,9 +90,40 @@ int openRSocket(char *interface); // Abre o socket do tipo Raw
 void free_msg(protocolo *msg); // Libera a memória alocada para a mensagem
 uint8_t prox_seq(protocolo *msg); // Retorna o próximo número de sequência
 protocolo *aloca_msg(); // Aloca a memória para a mensagem
-protocolo *cria_msg(uint8_t seq, uint8_t tipo, uint8_t *dados, ...); // Cria a mensagem
-void envia_msg(int socket, protocolo *msg); // Envia a mensagem para o socket
-protocolo *recebe_msg(int socket, int n_msgs); // Recebe a mensagem
+//protocolo *cria_msg(uint8_t seq, uint8_t tipo, uint8_t *dados, ...); // Cria a mensagem
+void envia_msg(protocolo *msg, int socket); // Envia a mensagem para o socket
+//protocolo *recebe_msg(int socket, int n_msgs); // Recebe a mensagem
 uint8_t ler_msg(protocolo *msg); // Lê o tipo da mensagem
 void imprime_msg(protocolo *msg); // Imprime a mensagem
 void socket_errors(short errno, interface ifc); // Mostas os possíveis erros de socket
+uint8_t CRC8_calc( uint8_t data, uint8_t size); // Faz o cálculo do CRC8
+
+int send_single_file(char *file_name, int socket);
+
+void log_message(const char* message);
+
+int verify_packet_parameters(uint8_t size, uint8_t sequence, uint8_t type);
+
+char* arrayToString(uint8_t* array, size_t length);
+
+protocolo *cria_msg(protocolo *packet, uint8_t size, uint8_t sequence, uint8_t type, void *data);
+
+int send_packet_and_wait_for_response(struct protocolo *packet, struct protocolo *response, int timeout, int socket);
+
+long long int get_file_size(char *path);
+
+double time_passed(clock_t start, clock_t end);
+
+/* Funções que tem que ser implementadas */
+
+//int receive_multiple_files(int socket);
+
+//int send_multiple_files(char files[][MAX_FILE_NAME_SIZE], int files_quantity, int socket);
+
+int receive_file(char *file_path,  int socket);
+
+int listen_packet(protocolo *buffer, int timeout, int socket);
+
+long long int get_file_size(char *path);
+
+char *get_file_path(char *log_file, char *file_name);
