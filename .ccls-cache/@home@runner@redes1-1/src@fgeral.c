@@ -82,8 +82,7 @@ protocolo *cria_msg(protocolo *packet, uint8_t size, uint8_t sequence,
   return packet;
 }
 
-void envia_msg(protocolo *msg, int socket)
-{
+void envia_msg(protocolo *msg, int socket) {
 
   uint8_t *buffer;
 
@@ -115,8 +114,7 @@ void envia_msg(protocolo *msg, int socket)
   }
 }
 
-protocolo *recebe_msg(int socket, int n_msgs) 
-{
+protocolo *recebe_msg(int socket, int n_msgs) {
 
   protocolo *msg;
   uint8_t *buffer;
@@ -148,11 +146,12 @@ protocolo *recebe_msg(int socket, int n_msgs)
       msg->crc8 = buffer[3 + msg->tamanho];
 
       free(buffer);
+      printf("Primeiro return\n");
       return (msg);
-
-    } 
-    else 
+    } else {
+      printf("Segundo return\n");
       return (NULL);
+    }
 }
 
 uint8_t ler_msg(protocolo *msg) {
@@ -160,10 +159,14 @@ uint8_t ler_msg(protocolo *msg) {
   uint8_t teste_crc = 0;
 
   if (!msg)
+  {
+    printf("ERRO: Mensagem Vazia\n");
     return (-1);
+  }
 
   teste_crc = 0;
 
+  printf("CRC: %d\n", teste_crc);
   if (teste_crc == msg->crc8)
     return (msg->tipo);
   else
@@ -324,7 +327,8 @@ int listen_packet(struct protocolo *buffer, int timeout, int socket) {
       }
 
       /* Checks if the packet is from client and if it's parity is right  */
-      if (is_start_marker_correct(buffer)) {
+      if (is_start_marker_correct(buffer)) 
+      {
         //   if (is_parity_right(buffer) == 0) {
         //   struct protocolo *nack = cria_msg(NULL, 0, 0, NACK, NULL);
         //   envia_msg(nack, socket);
@@ -377,7 +381,7 @@ double time_passed(clock_t start, clock_t end) {
   return ((double)(end - start) / CLOCKS_PER_SEC);
 }
 
-int conv_comando(char *comando, char *parametro) {
+int conv_comando(char *comando, char *parametro){
     char copia_comando[256];  // Supondo que comando não exceda 256 caracteres
     strcpy(copia_comando, comando); // Fazendo uma cópia para preservar o original
 
@@ -385,21 +389,17 @@ int conv_comando(char *comando, char *parametro) {
     strcpy(parametro, "");  // Inicializa parametro com uma string vazia
     quebra = strtok(copia_comando, " ");
 
-    if (quebra != NULL && !strcmp(quebra, "listar")) 
-    {
-      return LISTAR;
-    } 
-    else if (quebra != NULL && !strcmp(quebra, "baixar"))
-    {
-      quebra = strtok(NULL, ";");
-      if(quebra != NULL) 
-        strcpy(parametro, quebra);
-      return BAIXAR;
+    if (quebra != NULL && !strcmp(quebra, "listar")) {
+        return LISTAR;
+    } else if (quebra != NULL && !strcmp(quebra, "baixar")) {
+        quebra = strtok(NULL, ";");
+        if (quebra != NULL) {
+            strcpy(parametro, quebra);
+        }
+        return BAIXAR;
+    } else if (quebra != NULL && !strcmp(quebra, "sair")) {
+        return SAIR;
     }
-    else if (quebra != NULL && !strcmp(quebra, "sair"))
-    {
-      return SAIR;
-    }
-  
+
     return -1;  // Comando não reconhecido
 }
