@@ -1,6 +1,5 @@
 #include "define.h"
 
-char *current_dir;
 
 int receive_file(char *file_name, int socket)
 {

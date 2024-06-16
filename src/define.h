@@ -129,3 +129,6 @@ int listen_packet(protocolo *buffer, int timeout, int socket);
 long long int get_file_size(char *path);
 char *get_file_path(char *log_file, char *file_name);
 int conv_comando(char *comando, char *parametro);
+
+void get_current_directory(char *buffer, size_t size);
+void list_files(const char* directory);
