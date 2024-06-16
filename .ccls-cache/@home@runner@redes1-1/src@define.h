@@ -76,6 +76,7 @@ typedef struct protocolo {
 /* Comandos */
 #define LISTAR 0x0A // "00001010"
 #define BAIXAR 0x0B // "00001011"
+#define SAIR 0
 
 /* Cliente */
 void download(char *videoName); // Baixar arquivos do Servidor para o Cliente

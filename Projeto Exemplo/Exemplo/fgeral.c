@@ -247,6 +247,7 @@ protocolo* recebe_msg(int socket,int n_msgs){
 	msg = aloca_msg();
 	//recebe msg e salva no buffer
 	read(socket,buffer,tam_buffer);
+	
 	if(buffer[0] == INICIO){
 		//inicio
 		msg->dinicio = buffer[0];

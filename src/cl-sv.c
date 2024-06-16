@@ -13,6 +13,8 @@ int main(int argc, char *argv[]) {
   char cmd[255], param[255];
   protocolo *msg_recebida = NULL;
 
+  strncpy(ifc.name, argv[2], sizeof(ifc.name));
+
   if ((socket = openRSocket(ifc.name)) < 0) {
 
     switch (socket) {
@@ -32,44 +34,48 @@ int main(int argc, char *argv[]) {
   }
 
   switch (argv[1][1]) {
-    case 's':
-      while (1) {
-        msg_recebida = recebe_msg(socket, 1);
-        sequencia = prox_seq(msg_recebida);
-  
-        switch (ler_msg(msg_recebida)) {
+  case 's':
+    while (1) {
+      msg_recebida = recebe_msg(socket, 1);
+      sequencia = prox_seq(msg_recebida);
+
+      switch (ler_msg(msg_recebida)) {
+      case LISTAR:
+        printf("Comando de listar videos\n");
+        break;
+      case BAIXAR:
+        printf("Comando para baixar video\n");
+        break;
+      default:
+        printf("Erro \n");
+      }
+      free_msg(msg_recebida);
+    }
+    break;
+  case 'c':
+    do {
+      scanf("%[^\n]",cmd);
+      fgetc(stdin);
+      switch (conv_comando(cmd, param)) 
+      {
         case LISTAR:
-          printf("Comando de listar videos\n");
+          printf("Comando de listar no client\n");
           break;
         case BAIXAR:
-          printf("Comando para baixar video\n");
+          printf("Comando de baixar no client\n");
+          printf("Parametro: %s\n", param);
+          break;
+        case SAIR:
+          printf("Encerrando programa\n");
           break;
         default:
-          printf("Erro\n");
-        }
-        free_msg(msg_recebida);
-      }
+          printf("ERRO - Comando %s não encontrado\n", cmd);
+      }  
+    } while (strcmp(cmd, "sair") != 0);
     break;
-    case 'c':
-      do {
-        switch (conv_comando(cmd, param))
-          {
-          case LISTAR:
-            printf("Comando de listar no client\n");
-            break;
-          case BAIXAR:
-            printf("Comando de baixar no client\n");
-            printf("Parametro: %s\n", param);
-            break;
-          default:
-            printf("ERRO - Comando %s não encontrado\n", cmd);
-          }
-  
-      } while (strcmp(cmd, "exit") != 0);
-    break;
-    default:
-      printf("ERRO - Tipo de cliente não encontrado\n");
-      return -1;
+  default:
+    printf("ERRO - Tipo de cliente não encontrado\n");
+    return -1;
   }
 }
 
