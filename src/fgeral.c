@@ -402,4 +402,5 @@ int conv_comando(char *comando, char *parametro){
     }
 
     return -1;  // Comando não reconhecido
+
 }

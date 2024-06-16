@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
           default:
             printf("ERRO - Comando %s não encontrado\n", cmd);
           }
-
+  
       } while (strcmp(cmd, "sair") != 0);
     break;
     default:
