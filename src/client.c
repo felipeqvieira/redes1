@@ -146,6 +146,66 @@ void list_files(const char* directory) {
     closedir(dir);
 }
 
+void list_files_remote(int socket)
+{
+    protocolo *msg, *msg_recebida;
+    int sequencia, contador;
+
+    contador = 0;
+    sequencia = 0;
+    msg = NULL;
+    msg = cria_msg(msg, 0, 0, LISTAR, NULL);
+    envia_msg(msg, socket);
+    timeout(socket, msg);
+    do
+    {
+        msg_recebida = recebe_msg(socket, 1);
+        sequencia = prox_seq(msg_recebida);
+        switch (ler_msg(msg_recebida))
+        {
+        case ACK:
+            printf("ACK recebido\n");
+            free_msg(msg_recebida);
+            free_msg(msg);
+            cria_msg(msg, 0, sequencia, ACK, NULL);
+            envia_msg(msg, socket);
+            timeout(socket, msg);
+            break;
+        case NACK:
+            printf("NACK recebido\n");
+            free_msg(msg_recebida);
+            envia_msg(msg, socket);
+            timeout(socket, msg);
+            break;
+        case ERRO:
+            printf("Erro ao listar\n");
+            free_msg(msg_recebida);
+            cria_msg(msg, 0, sequencia, NACK, NULL);
+            envia_msg(msg, socket);
+            timeout(socket, msg);
+            break;
+        case ERRO_CRC:
+            printf("Erro CRC\n");
+            free_msg(msg_recebida);
+            cria_msg(msg, 0, sequencia, NACK, NULL);
+            envia_msg(msg, socket);
+            timeout(socket, msg);
+            break;
+        case MOSTRA_NA_TELA:
+            contador++;
+            printf("%d - ", contador);
+            printf("%s\n", msg_recebida->dados);
+            free_msg(msg_recebida);
+            cria_msg(msg, 0, sequencia, ACK, NULL);
+            envia_msg(msg, socket);
+            timeout(socket, msg);
+            break;
+        case FIM_TRANSMISSAO:
+            break;
+        }
+    } while (ler_msg(msg_recebida) != FIM_TRANSMISSAO);
+}
+
 void print_commands() {
   printf("- ls : Lista os videos do servidor.\n");
   printf("- ls -e <extensao> : Listar os videos da extensao selecionada .mp4 ou .avi.\n");

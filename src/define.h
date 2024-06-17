@@ -40,7 +40,9 @@ typedef struct protocolo {
 
 } protocolo;
 
-#define TIMEOUT 60
+// TIMEOUT
+#define TIMEOUT 5
+#define MAX_TRY 3
 
 // TAMANHO
 #define TAM_BUFFER 67 // 63bytes de dados + 4 bytes fixos (Marcador, Tamanho, Seq, Tipo))
@@ -76,7 +78,7 @@ typedef struct protocolo {
 /* Comandos */
 #define LISTAR 0x0A // "00001010"
 #define BAIXAR 0x0B // "00001011"
-#define SAIR 0
+#define SAIR -1
 
 /* Cliente */
 void download(char *videoName); // Baixar arquivos do Servidor para o Cliente
@@ -132,3 +134,5 @@ int conv_comando(char *comando, char *parametro);
 
 void get_current_directory(char *buffer, size_t size);
 void list_files(const char* directory);
+void timeout(int socket,protocolo *msg);
+void list_files_remote(int socket);

@@ -53,14 +53,15 @@ uint8_t *aloca_vetor(int tam) {
   return (dados);
 }
 
-protocolo *cria_msg(protocolo *packet, uint8_t size, uint8_t sequence,
-                    uint8_t type, void *data) {
+protocolo *cria_msg(protocolo *packet, uint8_t size, uint8_t sequence, uint8_t type, void *data) {
+  
   if (!verify_packet_parameters(size, sequence, type)) {
     perror("Invalid packet!");
     return NULL;
   }
 
-  if (packet == NULL) {
+  if (packet == NULL) 
+  {
     packet = calloc(1, sizeof(struct protocolo));
     if (packet == NULL) {
       perror("Alloc failed!");
@@ -106,10 +107,11 @@ void envia_msg(protocolo *msg, int socket) {
 
     buffer[3 + msg->tamanho] = msg->crc8;
 
-    if (write(socket, buffer, TAM_BUFFER) != -1)
-      // Verificar depois se vamos manter assim
+    if(write(socket, buffer, TAM_BUFFER) != -1)
       free(buffer);
-  } else {
+  } 
+  else 
+  {
     fprintf(stderr, "ERRO: Mensagem Vazia\n");
   }
 }
@@ -146,10 +148,8 @@ protocolo *recebe_msg(int socket, int n_msgs) {
       msg->crc8 = buffer[3 + msg->tamanho];
 
       free(buffer);
-      printf("Primeiro return\n");
       return (msg);
     } else {
-      printf("Segundo return\n");
       return (NULL);
     }
 }
@@ -403,4 +403,33 @@ int conv_comando(char *comando, char *parametro){
 
     return -1;  // Comando não reconhecido
 
+}
+
+void timeout(int socket,protocolo *msg)
+{
+	fd_set readset;
+	struct timeval tv;
+	int i=0;
+	int result;
+	while(i<MAX_TRY){
+		tv.tv_sec = TIMEOUT;
+		tv.tv_usec = 0;
+		//send(socket,buffer,tam_buffer, 0);
+		FD_ZERO(&readset);
+		FD_SET(socket, &readset);
+		result = select(socket+67, &readset, NULL, NULL, &tv);
+		if (result <= 0) { //timeout
+			printf("TIMEOUT - %d\n",i);
+			envia_msg(msg, socket);
+			i++;
+		}else if(FD_ISSET(socket, &readset)){
+			//printf("RECEBEU PACOTE\n");
+			//recebeu quebra o loop
+			break;
+		}
+	}
+	if(i==MAX_TRY){
+		printf("ERRO - Timeout máximo atingido!\n");
+		exit(0);
+	}
 }

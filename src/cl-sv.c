@@ -48,6 +48,12 @@ int main(int argc, char *argv[]) {
         case BAIXAR:
           printf("Comando para baixar video\n");
           break;
+        case ACK:
+          printf("ACK recebido\n");
+          break;
+        case NACK:
+          printf("NACK recebido\n");
+          break;
         default:
           printf("Erro\n");
         }
@@ -62,11 +68,18 @@ int main(int argc, char *argv[]) {
           {
           case LISTAR:
             printf("Comando de listar no client\n");
-            list_files(current_dir);
+            // list_files(current_dir);
+            list_files_remote(socket);
             break;
           case BAIXAR:
             printf("Comando de baixar no client\n");
             printf("Parametro: %s\n", param);
+            break;
+          case ACK:
+            printf("ACK recebido\n");
+            break;
+          case NACK:
+            printf("NACK recebido\n");
             break;
           case SAIR:
             printf("Encerrando programa\n");
