@@ -1,3 +1,4 @@
+#include "socket.h"
 #include "define.h"
 
 int openRSocket(char *interface) {

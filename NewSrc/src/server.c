@@ -13,7 +13,7 @@
 #include <dirent.h>
 #include "../lib/socket.h"
 #include "../lib/connection.h"
-#include "../lib/backup.h"
+#include "../lib/command.h"
 #include "../lib/log.h"
 #include "../lib/utils.h"
 
@@ -29,40 +29,43 @@ int main()
     char current_directory[100];
     get_current_directory(current_directory, sizeof(current_directory));
 
-    log_message(current_directory);
+    // log_message(current_directory);
 
 
     struct packet buffer;
-    struct packet *packet = create_or_modify_packet(NULL, 0, 0, PT_ACK, NULL);
+    struct packet *packet = create_or_modify_packet(NULL, 0, 0, ACK, NULL);
     char *file_name = NULL;
     char *full_path_to_file = NULL;
-
+    // getc(stdin);
     while (1)
     {
         log_message("Esperando requisição...");
         listen_packet(&buffer, 9999, socket);
-
         switch (buffer.type)
         {
-        case PT_ACK:
-            log_message("ACK received!");
+        case ACK:
+            log_message("ACK recebido!");
             break;
-        case PT_NACK:
-            log_message("NACK received!");
+        case NACK:
+            log_message("NACK recebido!");
+            break;
+        case LIST:
+            log_message("LIST recebido!");
+            // list_video_files_in_directory(current_directory, socket);
             break;
         case PT_RESTORE_ONE_FILE:
-            log_message("RESTORE_FILE received!");
+            log_message("RESTORE_FILE recebido!");
 
             // Receive file name
             file_name = uint8ArrayToString(buffer.data, buffer.size);
-            log_message("File to restore:");
+            log_message("Arquivo para fazer o download:");
             log_message(file_name);
 
             if (access(file_name, F_OK) != 0)
             {
-                log_message("File does not exist!");
+                log_message("Arquivo não existe!");
 
-                create_or_modify_packet(packet, MAX_DATA_SIZE, 0, PT_ERROR, "File does not exist!");
+                create_or_modify_packet(packet, MAX_DATA_SIZE, 0, ERROR, "Arquivo nçao existe");
                 send_packet(packet, socket); // send ERROR
 
                 free(file_name);
@@ -74,7 +77,7 @@ int main()
             }
 
             // Send OK
-            create_or_modify_packet(packet, 0, 0, PT_OK, NULL);
+            create_or_modify_packet(packet, 0, 0, OK, NULL);
             send_packet(packet, socket);
 
             log_message("Sending:");
@@ -85,7 +88,7 @@ int main()
                 log_message("Error sending file!");
 
                 // Error sending file
-                create_or_modify_packet(packet, 0, 0, PT_ERROR, "Error sending file!");
+                create_or_modify_packet(packet, 0, 0, ERROR, "Error sending file!");
                 send_packet(packet, socket); // send ERROR
 
                 free(file_name);
@@ -97,12 +100,12 @@ int main()
             free(full_path_to_file);
             break;
 
-        case PT_END_FILE:
-            create_or_modify_packet(packet, 0, 0, PT_OK, NULL);
+        case END_FILE:
+            create_or_modify_packet(packet, 0, 0, OK, NULL);
             send_packet(packet, socket);
             break;
         default:
-            printf("Invalid packet received!\n");
+            printf("Pacote invalido recebido!\n");
             break;
         }
 

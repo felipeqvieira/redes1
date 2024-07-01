@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
   current_dir = (char *)malloc(255 * sizeof(char));
   get_current_directory(current_dir, 255);
 
-  strncpy(ifc.name, argv[2], sizeof(ifc.name)); 
+  strncpy(ifc.name, argv[2], sizeof(ifc.name));
 
   if ((socket = openRSocket(ifc.name)) < 0) {
 
@@ -62,6 +62,7 @@ int main(int argc, char *argv[]) {
     break;
     case 'c':
       do {
+        printf("Flix $: ");
         scanf("%[^\n]",cmd);
         fgetc(stdin);
         switch (conv_comando(cmd, param))

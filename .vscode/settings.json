@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "define.h": "c",
+        "limits.h": "c",
+        "socket.h": "c",
+        "evp.h": "c"
+    }
+}

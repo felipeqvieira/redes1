@@ -7,7 +7,8 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <unistd.h>
-#include "../lib/backup.h"
+#include "../lib/command.h"
+#include "../lib/connection.h"
 
 #define READ_BUFFER_SIZE 100
 #define MD5_DIGEST_LENGTH 100
@@ -23,6 +24,7 @@ void list_files(const char* directory);
 int file_to_md5(const char* path, char* md5); 
 int get_files(const char* pattern, char file_names[][MAX_FILE_NAME_SIZE]);
 int create_new_directory(char* directory_name);
+int show_packet_data(struct packet *p);
 
 
 #endif  // UTILS_H

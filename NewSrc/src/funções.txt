@@ -1,0 +1,55 @@
+=================== command.c =====================
+
+is_video_file -> Verifica se o arquivo é um vídeo.
+
+list_video_files_in_directory -> Pega os nomes dos arquivos e envia em pacote.
+
+send_single_file -> Envia mensagem avisando que vai enviar um arquivo e envia o arquivo
+
+restore_single_file -> requisita restauração, confirma backup e recebe arquivo
+
+receive_file -> Recebe um arquivo
+
+===================== log.c =======================
+
+log_message -> informação da mensagem
+
+==================== socket.c =====================
+
+create_socket -> cria canal de comunicação
+
+==================== utils.c ======================
+
+get_file_size -> pega o tamanho do arquivo
+
+uint8ArrayToString -> converte vetor de uint8 em string
+
+get_current_directory -> pega diretorio corrente
+
+
+file_exists -> abre em modo de leitura e verifica se o arquivo existe
+
+list_files -> Lista arquivos de um diretório
+
+================= conncection.c ===================
+
+send_packet_and_wait_for_response -> envia o pacote e espera resposta
+
+send_packet -> envia packet
+
+listen_packet -> escuta o pacote e verifica marcador inicial dentro do timeout
+
+create_or_modify_packet -> cria ou modifica um pacote
+
+destroy_packet -> dá free no packet
+
+verify_packet_parameters -> Verifica tamanho, sequencia e tipo
+
+clear_buffer -> limpa buffer
+
+
+===========================================================
+
+Eles não tem MAX TRY
+
+Mudamos a MAX_SEQUENCE para 31, achamos estranho o deles estar 15.

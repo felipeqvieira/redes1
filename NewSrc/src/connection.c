@@ -17,33 +17,38 @@
 #include <time.h>
 #include "../lib/connection.h"
 #include "../lib/log.h"
+#include "../lib/utils.h"
 
 double time_passed(clock_t start, clock_t end);
 void shift_bits(struct packet *packet);
 void unshift_bits(struct packet* p);
 int is_start_marker_correct(struct packet *p);
-int is_parity_right(struct packet *p);
+int is_crc8_right(struct packet *p);
 
-uint8_t calculate_vertical_parity(uint8_t packet_data[], size_t length) 
+// Calcula o CRC8
+uint8_t crc8_calc(uint8_t *data, size_t size) 
 {
-    uint8_t parity = 0;
-    int odd = -1;
 
-    for (size_t i = 0; i < length; i++) 
-    {
-        for(unsigned int j = 0; j < length; j++)
-        {
-            if((1U << i) & packet_data[j])
-            { 
-                odd *= -1;
-            }
-        }
-        uint8_t byte_parity = odd == 1? 1 : 0;
-        parity = parity | (byte_parity << (i % 8));
-        odd = -1;
+  uint8_t valor = *data;
+  uint8_t crc = 0;
+  const uint8_t generator = 0x07; // Polynomial
+
+  for (int j = 0; j < (int)size; j++) {
+    crc ^= valor;
+
+    // For each bit of the byte check for the MSB bit, if it is 1 then left
+    // shift the CRC and XOR with the polynomial otherwise just left shift the
+    // variable
+    for (int i = 0; i < 8; i++) {
+      if ((crc & 0x80) != 0) {
+        crc = (uint8_t)((crc << 1 ^ generator));
+      } else {
+        crc <<= 1;
+      }
     }
+  }
 
-    return parity;
+  return crc;
 }
 
 /* Verify packet parameters */
@@ -89,12 +94,12 @@ struct packet *create_or_modify_packet(struct packet *packet, uint8_t size, uint
     packet->size = size;
     packet->sequence = sequence;
     packet->type = type;
-    packet->parity = 0;
+    packet->crc8 = 0;
 
     if (data != NULL) 
     {
         memcpy(&packet->data, data, size);
-        packet->parity = calculate_vertical_parity(data, size);
+        packet->crc8 = crc8_calc(data, size);
     }
 
     return packet;
@@ -107,20 +112,25 @@ struct packet *create_or_modify_packet(struct packet *packet, uint8_t size, uint
  * 
  * @see create_or_modify_packet
 */
+
+/* Liberar o pacote se existir */
 void destroy_packet(struct packet *p) 
 {
+    if (p == NULL) 
+        return;
     free(p);
 }
 
 int send_packet(struct packet *packet, int socket)
 {
+
     shift_bits(packet);
     if(send(socket, packet, sizeof(struct packet), 0) == -1) 
     {
         perror("send");
         close(socket);
         exit(EXIT_FAILURE);
-    } 
+    }
     unshift_bits(packet);
     return 0;
 }
@@ -141,7 +151,7 @@ int send_packet(struct packet *packet, int socket)
 int send_packet_and_wait_for_response(struct packet *packet, struct packet *response, int timeout, int socket)
 {
     int response_confirmation = 0;
-    struct packet *response_aux = create_or_modify_packet(NULL, 0, 0, PT_ACK, NULL);
+    struct packet *response_aux = create_or_modify_packet(NULL, 0, 0, ACK, NULL);
 
     while(!response_confirmation)
     {
@@ -151,7 +161,7 @@ int send_packet_and_wait_for_response(struct packet *packet, struct packet *resp
     
         if(listen_response == -1) 
             return -1;
-        else if(response_aux->type == PT_ACK || response_aux->type == PT_OK || response_aux->type == PT_ERROR || response_aux->type == PT_MD5)
+        else if(response_aux->type == ACK || response_aux->type == OK || response_aux->type == ERROR)
             response_confirmation = 1;
     }
 
@@ -163,14 +173,14 @@ int send_packet_and_wait_for_response(struct packet *packet, struct packet *resp
 /* Shift bits function */
 void shift_bits(struct packet* p) {
     p->size = p->size << 2; // shift left 2 bits to use upper 6 bits
-    p->sequence = p->sequence << 2; // shift left 2 bits to use upper 6 bits
-    p->type = p->type << 4; // shift left 4 bits to use upper 4 bits
+    p->sequence = p->sequence << 3; // shift left 3 bits to use upper 5 bits
+    p->type = p->type << 3; // shift left 3 bits to use upper 5 bits
 }
 
 void unshift_bits(struct packet* p) {
     p->size = p->size >> 2; // shift right 2 bits to get back original 6 bits
-    p->sequence = p->sequence >> 2; // shift right 2 bits to get back original 6 bits
-    p->type = p->type >> 4; // shift right 4 bits to get back original 4 bits
+    p->sequence = p->sequence >> 3; // shift right 3 bits to get back original 5 bits
+    p->type = p->type >> 3; // shift right 3 bits to get back original 5 bits
 }
 
 /* clear buffer */
@@ -232,20 +242,20 @@ int listen_packet(struct packet *buffer, int timeout, int socket)
                 return -1;
             }
 
-            /* Checks if the packet is from client and if it's parity is right  */ 
+            /* Checks if the packet is from client and if it's crc8 is right  */ 
             if(is_start_marker_correct(buffer) )
             {
-                if (is_parity_right(buffer) == 0)
-                {
-                    struct packet *nack = create_or_modify_packet(NULL, 0, 0, PT_NACK, NULL);
-                    send_packet(nack, socket);
-                    destroy_packet(nack);
-                }
-                else
-                {
+                // if (is_crc8_right(buffer) == 0)
+                // {
+                //     struct packet *nack = create_or_modify_packet(NULL, 0, 0, NACK, NULL);
+                //     send_packet(nack, socket);
+                //     destroy_packet(nack);
+                // }
+                // else
+                // {
                     // valid packet
                     return 0;
-                }
+                // }
             }
         }
         now = clock();
@@ -254,7 +264,7 @@ int listen_packet(struct packet *buffer, int timeout, int socket)
 }
 
 /* 
- * Checks if the start marker is correct and if the parity is correct.
+ * Checks if the start marker is correct and if the crc8 is correct.
  * 
  * @param p The packet to be checked.
 */
@@ -267,12 +277,13 @@ int is_start_marker_correct(struct packet *p)
     return 1;
 }
 
-int is_parity_right(struct packet *p)
+// Verificar se o CRC8 é o correto
+int is_crc8_right(struct packet *p)
 {
-    if(p->parity != calculate_vertical_parity(p->data, p->size))
+    if(p->crc8 != crc8_calc(p->data, p->size))
     {
         #ifdef DEBUG
-            log_message("Vertical parity erro!");
+            log_message("Vertical crc8 erro!");
         #endif
         return 0;
     }

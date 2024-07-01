@@ -1,28 +1,35 @@
 SRC=src/
 EXE=cl-sv
-OBJ=client.o server.o fgeral.o raw.o cl-sv.o
+OBJ=client.o server.o fgeral.o socket.o network.o commands.o
 CC =gcc -c -g
 
-all: $(OBJ)
-	gcc $(OBJ) -o $(EXE) -g -lm
+all: client server
 	rm -f $(OBJ)
-	
-cl-sv.o: $(SRC)cl-sv.c $(SRC)define.h
-	$(CC) $(SRC)cl-sv.c 
 
-client.o: $(SRC)client.c $(SRC)define.h  
+client: client.o socket.o network.o commands.o
+	gcc client.o socket.o network.o commands.o -o client -g -lm
+
+server: server.o socket.o network.o commands.o
+	gcc server.o socket.o network.o commands.o -o server -g -lm
+
+
+socket.o: $(SRC)socket.c $(SRC)socket.h 
+	$(CC) $(SRC)socket.c 
+
+fgeral.o: $(SRC)fgeral.c 
+	$(CC) $(SRC)fgeral.c
+
+commands.o: $(SRC)commands.c $(SRC)network.h $(SRC)define.h $(SRC)commands.h
+	$(CC) $(SRC)commands.c 
+
+network.o: $(SRC)network.c $(SRC)network.h
+	$(CC) $(SRC)network.c
+
+client.o: $(SRC)client.c $(SRC)define.h
 	$(CC) $(SRC)client.c 
 
-server.o: $(SRC)server.c $(SRC)define.h 
-	$(CC) $(SRC)server.c 
-
-raw.o: $(SRC)raw.c $(SRC)define.h 
-	$(CC) $(SRC)raw.c 
-
-fgeral.o: $(SRC)fgeral.c $(SRC)define.h
-	$(CC) $(SRC)fgeral.c 
+server.o: $(SRC)server.c $(SRC)define.h
+	$(CC) $(SRC)server.c
 
 purge:
-	rm  -f $(OBJ) $(EXE)
-debug:
-	valgrind --verbose --leak-check=full --track-origins=yes ./cl-sv -t c -i eth0
+	rm  -f $(OBJ) client server
