@@ -13,7 +13,7 @@
 #define OK 0xD
 #define ACK 0x00
 #define NACK 0x01
-#define SHOW_IN_SCREEN 0x1
+#define SHOW_IN_SCREEN 0x10
 #define TIMEOUT 10 //seconds
 
 // remover

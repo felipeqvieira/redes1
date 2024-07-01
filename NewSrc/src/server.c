@@ -25,7 +25,6 @@ int main()
     int socket = create_socket("lo");
     log_message("Soquete criado!");
     log_message("Servidor ativo e funcionando!");
-
     char current_directory[100];
     get_current_directory(current_directory, sizeof(current_directory));
 
@@ -36,12 +35,11 @@ int main()
     struct packet *packet = create_or_modify_packet(NULL, 0, 0, ACK, NULL);
     char *file_name = NULL;
     char *full_path_to_file = NULL;
-    // getc(stdin);
     while (1)
     {
         log_message("Esperando requisição...");
         listen_packet(&buffer, 9999, socket);
-        switch (buffer.type)
+        switch(buffer.type)  
         {
         case ACK:
             log_message("ACK recebido!");
@@ -51,9 +49,9 @@ int main()
             break;
         case LIST:
             log_message("LIST recebido!");
-            // list_video_files_in_directory(current_directory, socket);
+            list_video_files_in_directory(current_directory, socket);
             break;
-        case PT_RESTORE_ONE_FILE:
+        case DOWNLOAD:
             log_message("RESTORE_FILE recebido!");
 
             // Receive file name
@@ -65,7 +63,7 @@ int main()
             {
                 log_message("Arquivo não existe!");
 
-                create_or_modify_packet(packet, MAX_DATA_SIZE, 0, ERROR, "Arquivo nçao existe");
+                create_or_modify_packet(packet, MAX_DATA_SIZE, 0, ERROR, "Arquivo não existe");
                 send_packet(packet, socket); // send ERROR
 
                 free(file_name);
@@ -100,16 +98,16 @@ int main()
             free(full_path_to_file);
             break;
 
-        case END_FILE:
-            create_or_modify_packet(packet, 0, 0, OK, NULL);
-            send_packet(packet, socket);
-            break;
+        // case END_FILE:
+            // create_or_modify_packet(packet, 0, 0, OK, NULL);
+            // send_packet(packet, socket);
+            // break;
         default:
+            show_packet_data(&buffer);
             printf("Pacote invalido recebido!\n");
             break;
         }
-
-        // Reseta o buffer
+        // Reset the buffer
         buffer.start_marker = 0;
     }
 

@@ -8,7 +8,7 @@
 #define EXIT 3
 
 
-void list_video_files_in_directory(char *directory, int socket);
+int list_video_files_in_directory(char *directory, int socket);
 int send_single_file(char *file_name, int socket);
 void restore_single_file(char *file_name, int socket);
 int receive_file(char *file_path,  int socket);

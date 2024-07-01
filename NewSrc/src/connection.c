@@ -73,12 +73,7 @@ int verify_packet_parameters(uint8_t size, uint8_t sequence, uint8_t type)
  * @see destroy_packet
 */
 struct packet *create_or_modify_packet(struct packet *packet, uint8_t size, uint8_t sequence, uint8_t type, void *data) 
-{
-    if (!verify_packet_parameters(size, sequence, type)) 
-    {
-        perror("Invalid packet!");
-        return NULL;
-    }
+{   
 
     if (packet == NULL) 
     {
@@ -88,6 +83,12 @@ struct packet *create_or_modify_packet(struct packet *packet, uint8_t size, uint
             perror("Alloc failed!");
             exit(EXIT_FAILURE);
         }
+    }
+    else if (!verify_packet_parameters(size, sequence, type)) 
+    {
+        perror("Invalid packet!");
+        destroy_packet(packet);
+        return NULL;
     }
 
     packet->start_marker = START_MARKER;
@@ -156,9 +157,9 @@ int send_packet_and_wait_for_response(struct packet *packet, struct packet *resp
     while(!response_confirmation)
     {
         send_packet(packet, socket);
-
+        show_packet_data(packet);
         int listen_response = listen_packet(response_aux, timeout, socket);
-    
+
         if(listen_response == -1) 
             return -1;
         else if(response_aux->type == ACK || response_aux->type == OK || response_aux->type == ERROR)
@@ -245,17 +246,17 @@ int listen_packet(struct packet *buffer, int timeout, int socket)
             /* Checks if the packet is from client and if it's crc8 is right  */ 
             if(is_start_marker_correct(buffer) )
             {
-                // if (is_crc8_right(buffer) == 0)
-                // {
-                //     struct packet *nack = create_or_modify_packet(NULL, 0, 0, NACK, NULL);
-                //     send_packet(nack, socket);
-                //     destroy_packet(nack);
-                // }
-                // else
-                // {
+                if (is_crc8_right(buffer) == 0)
+                {
+                    struct packet *nack = create_or_modify_packet(NULL, 0, 0, NACK, NULL);
+                    send_packet(nack, socket);
+                    destroy_packet(nack);
+                }
+                else
+                {
                     // valid packet
                     return 0;
-                // }
+                }
             }
         }
         now = clock();

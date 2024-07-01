@@ -25,41 +25,52 @@ int is_video_file(const char *filename)
     return 0;
 }
 
-void list_video_files_in_directory(char *directory, int socket)
+int list_video_files_in_directory(char *directory, int socket)
 {
-    DIR *dir;
-    struct dirent *entry;
-    char file_list[1024] = "teste";
-
-    if ((dir = opendir(directory)) != NULL)
+    DIR *d;
+    struct dirent *dir;
+    d = opendir(directory); // Diretório atual do servidor
+    if (d == NULL) 
     {
-        while ((entry = readdir(dir))!= NULL)
-        {
-            // DT_REG = 8
-            if (entry->d_type == 8)
-            {
-                strcat(file_list, entry->d_name);
-                strcat(file_list, "\n");
-            }
-        }
-        closedir(dir);
-    }
-    else
-    {
-        log_message("Could not open current directory!");
-        struct packet error_packet;
-        create_or_modify_packet(&error_packet, 0, 0, ERROR, "Could not open directory");
-        send_packet(&error_packet, socket);
-        return;
+        perror("opendir");
+        return -1;
     }
 
-    int long long packet_sequence = 0;
-
+    char file_list[MAX_DATA_SIZE];
+    memset(file_list, 0, sizeof(file_list));
     struct packet response_packet;
-    create_or_modify_packet(&response_packet, MAX_DATA_SIZE, packet_sequence , LIST, file_list);
-    send_packet(&response_packet, socket);
-}
+    struct packet *packet= NULL;
 
+    while ((dir = readdir(d)) != NULL) 
+    {
+        // if (dir->d_type == 8)  // Considera apenas arquivos regulares
+        // {
+            size_t name_len = strlen(dir->d_name);  // Calcula o comprimento do nome do arquivo
+            if (name_len + 1 < sizeof(file_list))  // Verifica se há espaço no buffer
+            {
+                memcpy(file_list, dir->d_name, name_len);  // Copia o nome do arquivo para o buffer
+                packet = create_or_modify_packet(NULL, MAX_DATA_SIZE, 0, SHOW_IN_SCREEN, file_list);
+                show_packet_data(packet);
+                send_packet_and_wait_for_response(packet, &response_packet, TIMEOUT, socket);
+                destroy_packet(packet);
+                memset(file_list, 0, sizeof(file_list));  // Limpa o buffer
+            }
+            else
+            {
+                break;  // Sem espaço suficiente no buffer
+            }
+        // }
+    }
+    closedir(d);
+
+    packet = create_or_modify_packet(NULL, 0, 0, END_FILE, NULL);
+    send_packet_and_wait_for_response(packet, &response_packet, TIMEOUT, socket);
+    // destroy_packet(packet);
+
+    return 0;
+}
+    
+// ###########################################################################################
 
 /*
  * Sends a single file to the server.

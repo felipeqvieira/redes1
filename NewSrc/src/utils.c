@@ -208,11 +208,16 @@ void list_files(const char* directory) {
 
 int show_packet_data(struct packet *p){
 
+    if(p == NULL){
+        printf("Packet is NULL\n");
+        return -1;
+    }
+
     printf("Packet Type: %X\n", p->type);
     printf("Packet Size: %d\n", p->size);
     printf("Packet Data: %s\n", p->data);
     printf("Packet Sequence Number: %d\n", p->sequence);
     printf("Packet crc8: %d\n", p->crc8);
-
+    
     return 0;
 }
